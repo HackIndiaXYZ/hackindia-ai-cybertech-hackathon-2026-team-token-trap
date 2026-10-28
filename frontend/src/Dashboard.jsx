@@ -42,6 +42,7 @@ import {
 } from 'recharts'
 
 import { api } from './api/client.js'
+import AiChatbot from './components/AiChatbot.jsx'
 
 const navigation = [
   {
@@ -1155,6 +1156,8 @@ export default function Dashboard({
           )}
         </main>
       </div>
+
+      <AiChatbot metrics={metrics} recentEvents={events} isLight={isLight} />
     </div>
   )
 }

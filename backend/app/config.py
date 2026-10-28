@@ -26,6 +26,9 @@ class Settings(BaseSettings):
     decoy_email: Optional[str] = None
     decoy_password_hash: Optional[str] = None
 
+    # Google Gemini AI API Key
+    gemini_api_key: Optional[str] = None
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",

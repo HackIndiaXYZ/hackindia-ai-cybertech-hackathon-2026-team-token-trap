@@ -200,3 +200,15 @@ def test_event_records_do_not_contain_secrets():
         assert "access_token" not in evt
         assert "secret" not in evt
         assert "Authorization" not in evt
+
+
+def test_ai_copilot_chat():
+    response = client.post(
+        "/api/ai/chat",
+        json={"message": "What is TokenTrap and how do honey tokens work?"},
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert "reply" in data
+    assert len(data["reply"]) > 20
+    assert "source" in data

@@ -77,6 +77,17 @@ export const api = {
       token,
     }),
 
+  chatWithAi: (message, apiKey, history = [], context = {}) =>
+    request("/api/ai/chat", {
+      method: "POST",
+      body: JSON.stringify({
+        message,
+        api_key: apiKey || undefined,
+        history,
+        context,
+      }),
+    }),
+
   createDemoToken: (tokenType) =>
     request(`/api/demo/token/${encodeURIComponent(tokenType)}`, {
       method: "POST",
