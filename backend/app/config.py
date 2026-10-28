@@ -29,6 +29,10 @@ class Settings(BaseSettings):
     # Google Gemini AI API Key
     gemini_api_key: Optional[str] = None
 
+    # PostgreSQL Database Configuration
+    database_url: Optional[str] = "postgresql+psycopg://postgres:postgres@localhost:5432/tokentrap"
+    database_echo: bool = False
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",

@@ -47,6 +47,15 @@ def record_event(
     with _lock:
         _events.appendleft(event)
 
+    # Persist asynchronously / safely to PostgreSQL database
+    try:
+        from app.database.connection import SessionLocal
+        from app.database.repository import save_security_event
+        with SessionLocal() as db:
+            save_security_event(db, event)
+    except Exception:
+        pass
+
     return event.copy()
 
 
@@ -101,11 +110,31 @@ def register_decoy_session(session_id: str) -> None:
         _active_decoy_sessions[session_id] = now
         _cleanup_expired_decoy_sessions_locked(now)
 
+    try:
+        from app.database.connection import SessionLocal
+        from app.database.repository import register_decoy_session as db_register_decoy_session
+        with SessionLocal() as db:
+            db_register_decoy_session(
+                db,
+                session_id=session_id,
+                subject="visitor@gmail.com",
+            )
+    except Exception:
+        pass
+
 
 def unregister_decoy_session(session_id: str) -> None:
     """End an active decoy session on logout."""
     with _lock:
         _active_decoy_sessions.pop(session_id, None)
+
+    try:
+        from app.database.connection import SessionLocal
+        from app.database.repository import terminate_decoy_session as db_terminate_decoy_session
+        with SessionLocal() as db:
+            db_terminate_decoy_session(db, session_id=session_id)
+    except Exception:
+        pass
 
 
 def _cleanup_expired_decoy_sessions_locked(now: datetime) -> None:

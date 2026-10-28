@@ -55,20 +55,30 @@ The system consists of three interconnected components:
 hackindia-ai-cybertech-hackathon-2026-team-token-trap/
 ├── backend/
 │   ├── app/
+│   │   ├── ai/
+│   │   │   └── routes.py          # /api/ai/chat Google Gemini AI Copilot
 │   │   ├── auth/
 │   │   │   ├── routes.py          # Login, logout, canary activations, admin overview
 │   │   │   └── tokens.py          # Dual-key JWT issue and verification logic
+│   │   ├── database/
+│   │   │   ├── connection.py      # PostgreSQL (psycopg) engine, pooling & session generator
+│   │   │   ├── models.py          # SQLAlchemy 2.0 ORM entities (Users, Events, Canaries, Sessions)
+│   │   │   ├── repository.py      # CRUD repository methods for telemetry & deception
+│   │   │   ├── seed.py            # Database seeder for demo accounts & canaries
+│   │   │   └── schema.sql         # Pure PostgreSQL DDL with GIN indexing & triggers
 │   │   ├── monitoring/
 │   │   │   ├── events.py          # Bounded event store, metrics derivation, session tracker
 │   │   │   └── routes.py          # /api/monitoring/events & /api/monitoring/summary
-│   │   ├── config.py              # Pydantic Settings configuration
-│   │   └── main.py                # FastAPI initialization & CORS configuration
+│   │   ├── config.py              # Pydantic Settings configuration (PostgreSQL & Gemini)
+│   │   └── main.py                # FastAPI initialization, CORS, DB lifespan & health checks
 │   ├── tests/
+│   │   ├── test_database.py       # Comprehensive PostgreSQL/ORM model & query tests
 │   │   ├── test_routes.py         # End-to-end route, activation, and auth tests
 │   │   └── test_tokens.py         # JWT key separation and verifier tests
 │   ├── requirements.txt           # Python backend dependencies
 │   ├── .env                       # Local secrets (never committed)
 │   └── .env.example               # Configuration template
+├── docker-compose.yml             # PostgreSQL 16 Alpine container with healthchecks
 ├── frontend/                      # Security Monitoring Center (Port 5173)
 │   ├── src/
 │   │   ├── api/client.js          # API client for monitoring & auth
@@ -240,8 +250,31 @@ cd protected-portal && npm run build
 
 ---
 
-## 8. Known Limitations & Prototype Notes
+---
 
-- **In-Memory Telemetry**: For this hackathon demonstration prototype, events and active session registries are stored in a thread-safe, bounded in-memory structure (`maxlen=1000`). Data resets when the backend process restarts. In production, connect an append-only time-series database or SIEM (e.g., PostgreSQL / TimescaleDB / Elasticsearch).
-- **Session Lifetimes**: JWT access tokens are valid for 15 minutes (`TOKEN_LIFETIME_MINUTES = 15`). Tokens are held in browser memory and cleared on logout.
-- **Simulated Records**: All documents and database schemas in the decoy layer are synthetic demo records designed to catch unauthorized access without exposing real data.
+## 8. Database Architecture & PostgreSQL Integration
+
+TokenTrap is powered by a production-ready **PostgreSQL database architecture** with SQLAlchemy 2.0 ORM, dual-write telemetry persistence, and fallback resilience:
+
+### Database Schema Tables:
+1. **`users`**: Genuine administrators and decoy honey-accounts with Argon2id password hashes, account modes (`genuine` vs `decoy`), and roles.
+2. **`security_events`**: Immutable audit logs of authentication attempts, canary interactions, and blocked requests. Uses PostgreSQL `JSONB` with a **GIN index** for sub-millisecond query performance on nested event telemetry.
+3. **`decoy_resources`**: Synthetic honeypot canary tokens (`DECOY-001`, `DECOY-002`, `DECOY-003`, `HONEY-CRED-01`), tracking activation counts and timestamps.
+4. **`decoy_sessions`**: Intruder tracking registry with timeout expiration and logout termination.
+5. **`ai_conversations`**: Complete prompt-response audit log for the Google Gemini AI Security Copilot.
+
+### Starting PostgreSQL with Docker:
+A ready-to-run [docker-compose.yml](file:///d:/Projects/Hackindia/hackindia-ai-cybertech-hackathon-2026-team-token-trap/docker-compose.yml) is included:
+```bash
+# Start PostgreSQL 16 on port 5432 with auto-loaded schema & seed data
+docker compose up -d db
+```
+
+### Direct PostgreSQL DDL Script:
+You can also inspect or execute the pure PostgreSQL DDL directly:
+- File: [backend/app/database/schema.sql](file:///d:/Projects/Hackindia/hackindia-ai-cybertech-hackathon-2026-team-token-trap/backend/app/database/schema.sql)
+- Contains all `CREATE TABLE`, `CREATE INDEX`, GIN indexes, `updated_at` trigger functions, and default seed statements.
+
+### Database Health & Status Endpoint:
+- Check real-time database connectivity and table counts at `http://localhost:8000/api/database/status`.
+- Database status is also included in `http://localhost:8000/api/health`.
