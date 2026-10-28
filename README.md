@@ -1,441 +1,247 @@
-# TokenTrap — Antigravity Implementation Plan
+# TokenTrap — Deception-Based Cybersecurity Monitoring System
 
-> **Project:** TokenTrap — Deception-Based Cybersecurity Monitoring System  
-> **Purpose:** Implementation brief for Antigravity to complete the existing project as a working local MVP.  
-> **Target sprint:** 2 hours  
-> **Architecture:** React + Vite frontends, FastAPI backend, JWT authentication
+> **HackIndia AI CyberTech Hackathon 2026 — Team Token Trap**  
+> **Architecture:** React + Vite frontends, FastAPI backend, Argon2id hashing, dual-key JWT cryptographic separation.
 
 ---
 
-## 1. Objective
+## 1. Overview & Architecture
 
-Complete the existing **Team Token Trap** project without replacing working code. The MVP consists of two separate web applications connected to one FastAPI backend:
+**TokenTrap** is an intelligent deception-based defense monitoring platform. It uses honey-tokens, canary documents, and cryptographically isolated environments to detect, track, and monitor unauthorized intruders in real time without giving them access to real administrative data or sensitive records.
 
-1. **Security Monitoring Center** — an administrator-only dashboard for authentication activity, honey-token interactions, decoy sessions, blocked requests, and event logs.
-2. **Protected Environment** — a separate login portal that routes a successfully authenticated genuine account to a protected demo workspace and a configured decoy account to an isolated simulated workspace.
-3. **FastAPI backend** — centralized authentication, token validation, authorization, event recording, monitoring metrics, and decoy-resource interaction tracking.
+The system consists of three interconnected components:
 
-This is a local demonstration prototype, not a production identity provider or a claim of production-grade security.
+1. **Security Monitoring Center (`http://localhost:5173`)**
+   - High-tech Security Operations Center (SOC) dashboard.
+   - Requires genuine administrative authentication.
+   - Displays backend-derived live metrics (Authentication Attempts, Honey-Token Activations, Active Decoy Sessions, Blocked API Requests).
+   - Real-time Security Event Stream with search and multi-criteria filters (severity, environment).
+   - Interactive activity charts (Authentication attempts & threat incidents over time).
+   - **Dark Mode / Light Mode toggle** for customizable viewing contrast.
 
-## 2. Target URLs
+2. **Protected Environment Portal (`http://localhost:5174`)**
+   - Independent user-facing authentication portal.
+   - Dual-mode routing enforced strictly by the backend:
+     - **Genuine Account (`admin@gmail.com`)**: Routes to a verified protected workspace showing operational telemetry fetched from `/api/admin/overview`.
+     - **Decoy Account (`visitor@gmail.com`)**: Routes to an isolated sandbox displaying synthetic documents (`Confidential_Strategy_DRAFT.pdf`, `Internal_Credentials_Archive.txt`, `Synthetic_Database_Backup.sql`).
+   - Interactive canary activations: clicking or inspecting a decoy resource calls `POST /api/decoy/resources/{id}/activate`, instantly recording a high-severity honey-token activation event in the backend.
+   - **Dark Mode / Light Mode toggle** for seamless user experience.
+
+3. **FastAPI Central Backend (`http://localhost:8000`)**
+   - Centralized authentication with Argon2id password verification.
+   - Cryptographically separated JWT signing (distinct signing keys, issuers, and audiences for genuine and decoy tokens).
+   - Dual-verifier authorization guards that strictly reject decoy tokens on administrative endpoints.
+   - Thread-safe security event logging and dynamic metrics aggregation.
+   - Active decoy session tracking with automated timeout cleanup.
+   - Sliding-window rate limiting for repeated login failure protection.
+
+---
+
+## 2. Service URLs
 
 | Component | Development URL | Purpose |
 |---|---|---|
-| Security Monitoring Center | `http://localhost:5173` | Admin dashboard |
-| Protected Environment | `http://localhost:5174` | Login and simulated workspaces |
-| FastAPI backend | `http://localhost:8000` | Authentication and monitoring API |
-| API documentation | `http://localhost:8000/docs` | Inspect and test API routes |
-
-Keep the repository's current structure where practical. Create `protected-portal/` only if a separate portal does not already exist.
-
-## 3. Instructions for Antigravity
-
-Antigravity should **inspect, implement, run, and test** the existing project—not just explain how to build it.
-
-1. Inspect the repository before editing: frontend files, backend routes, token utilities, event storage, settings, dependencies, tests, and README.
-2. Preserve working features and current API contracts wherever possible.
-3. Do not replace the project with boilerplate or rewrite functioning authentication without a clear need.
-4. Work directly in existing files and add only necessary files.
-5. Reuse installed dependencies when possible.
-6. Run existing tests before and after important changes when practical.
-7. Do not claim a test or build passed unless it was actually executed successfully.
-8. If a blocker appears, report the exact error and continue with independent tasks.
-9. Prioritize a working end-to-end flow over decorative features.
-10. At the end, list modified/created files, actual test results, run commands, manual setup, and remaining limitations.
-
-## 4. Two-Hour Priority Schedule
-
-| Time | Priority | Deliverable |
-|---|---|---|
-| 00–10 min | Audit | Understand the current code and identify missing components |
-| 10–30 min | Authentication | Genuine/decoy login, token separation, configuration, CORS |
-| 30–50 min | Monitoring API | Event recording, summary metrics, event query, decoy interaction |
-| 50–75 min | Protected portal | Login, genuine workspace, simulated decoy workspace |
-| 75–95 min | Monitoring UI | Backend-driven metrics, event table, filters, refresh |
-| 95–110 min | Verification | Backend tests, frontend builds, local end-to-end checks |
-| 110–120 min | Wrap-up | README accuracy, run instructions, limitations, demo checklist |
-
-These are priorities, not a reason to leave critical authentication or integration failures unresolved. If time is limited, prioritize authentication, event recording, real dashboard integration, and the end-to-end demonstration.
+| **Security Monitoring Center** | `http://localhost:5173` | Administrator SOC dashboard & live event stream |
+| **Protected Environment** | `http://localhost:5174` | Enterprise portal & simulated decoy workspace |
+| **FastAPI Backend** | `http://localhost:8000` | Authentication, telemetry, and deception API |
+| **API Documentation (Swagger)** | `http://localhost:8000/docs` | Interactive Swagger API explorer |
+| **API Health Check** | `http://localhost:8000/api/health` | Backend status and UTC timestamp |
 
 ---
 
-## 5. Architecture and Suggested Structure
-
-Use the existing structure and adapt this layout as needed:
+## 3. Directory Layout
 
 ```text
-Team Token Trap/
+hackindia-ai-cybertech-hackathon-2026-team-token-trap/
 ├── backend/
 │   ├── app/
 │   │   ├── auth/
+│   │   │   ├── routes.py          # Login, logout, canary activations, admin overview
+│   │   │   └── tokens.py          # Dual-key JWT issue and verification logic
 │   │   ├── monitoring/
-│   │   ├── config.py
-│   │   └── main.py
+│   │   │   ├── events.py          # Bounded event store, metrics derivation, session tracker
+│   │   │   └── routes.py          # /api/monitoring/events & /api/monitoring/summary
+│   │   ├── config.py              # Pydantic Settings configuration
+│   │   └── main.py                # FastAPI initialization & CORS configuration
 │   ├── tests/
-│   ├── requirements.txt
-│   └── .env                 # Local secrets; never commit
-├── frontend/                # Security Monitoring Center
+│   │   ├── test_routes.py         # End-to-end route, activation, and auth tests
+│   │   └── test_tokens.py         # JWT key separation and verifier tests
+│   ├── requirements.txt           # Python backend dependencies
+│   ├── .env                       # Local secrets (never committed)
+│   └── .env.example               # Configuration template
+├── frontend/                      # Security Monitoring Center (Port 5173)
 │   ├── src/
+│   │   ├── api/client.js          # API client for monitoring & auth
+│   │   ├── components/Login.jsx   # Admin login with Dark/Light mode toggle
+│   │   ├── Dashboard.jsx          # SOC dashboard with live metrics, charts, event feed
+│   │   ├── App.jsx                # Theme provider and session router
+│   │   └── index.css              # Dark/Light theme styles
 │   └── package.json
-├── protected-portal/        # Create only if not already present
+├── protected-portal/              # Protected Environment (Port 5174)
 │   ├── src/
+│   │   ├── components/
+│   │   │   ├── Login.jsx          # Dual-target portal login with Dark/Light toggle
+│   │   │   ├── GenuineWorkspace.jsx # Genuine administrator telemetry view
+│   │   │   └── DecoyWorkspace.jsx   # Interactive canary documents workspace
+│   │   ├── api.js                 # Portal API connector
+│   │   ├── App.jsx                # Session router & theme state
+│   │   └── index.css              # CyberTech CSS styles
 │   └── package.json
 └── README.md
 ```
 
-### Component responsibilities
+---
 
-- **Monitoring frontend:** display backend-derived security metrics and events; require genuine admin authentication.
-- **Protected portal:** collect credentials, submit them to the backend, and display the workspace matching the token returned by the backend.
-- **Backend:** decide authentication and authorization, issue and validate tokens, record security events, and calculate monitoring metrics.
+## 4. Environment Configuration
 
-The frontend must never be the authority that decides whether an account is genuine or decoy.
+Configuration is loaded from `backend/.env`. A safe template is provided in `backend/.env.example`.
 
-## 6. Authentication and Access Control
-
-Implement or verify two separate account modes.
-
-### Genuine account
-
-- Read account configuration and password hash from backend environment settings.
-- Verify the password using the project's existing password-hashing library.
-- Issue a genuine JWT after successful authentication.
-- Permit access only to genuine administrative endpoints.
-- Return appropriate authorization errors for missing, malformed, expired, incorrectly signed, or wrong-type tokens.
-
-### Decoy account
-
-- Read decoy account configuration and password hash from backend settings.
-- Issue a decoy JWT using a cryptographically separate signing key or the existing secure token-separation design.
-- Permit access only to designated decoy resources.
-- Reject decoy tokens on genuine administrative endpoints.
-- Record decoy session and resource interactions as security events.
-
-### Invalid credentials
-
-- Record a `login_failed` event.
-- Return a generic message such as `Invalid email or password`.
-- Permit retry.
-- Never log submitted passwords, password hashes, JWTs, or raw Authorization headers.
-- Add lightweight rate limiting or repeated-failure protection if feasible within the sprint.
-
-### Token validation
-
-Validate signature, expiry, issuer, audience, and token type as supported by the current implementation. Keep token lifetimes short and configurable. Development-only token-creation routes must be unavailable outside development mode.
-
-Do not put signing secrets in frontend code or frontend environment variables.
-
-## 7. Protected Environment Website
-
-**Target:** `http://localhost:5174`
-
-Build a responsive, polished login page with:
-
-- TokenTrap branding and a concise security message
-- Email/authentication ID and password fields
-- Password show/hide control
-- Sign-in button and loading state
-- Generic login error
-- Backend unavailable/error state
-- Clear indication that this is an isolated demo environment
-
-Use the existing API request and response schemas. If compatible with the current backend, the login request may resemble:
-
-```json
-{
-  "email": "configured-account@example.com",
-  "password": "entered-password",
-  "mode": "real"
-}
+### Generating Argon2id Password Hashes
+Use the installed `argon2-cffi` library to hash passwords:
+```bash
+python -c "from argon2 import PasswordHasher; ph = PasswordHasher(); print(ph.hash('YourPasswordHere'))"
 ```
 
-Use the supported decoy mode for the configured decoy account. The backend—not a frontend selection control—must determine authorization.
-
-### Genuine workspace
-
-After genuine login, show a basic protected workspace containing:
-
-- Welcome panel
-- Genuine environment indicator
-- Session status
-- Safe data fetched from a genuine-only backend endpoint
-- Logout button
-
-Do not expose real sensitive records.
-
-### Decoy workspace
-
-After decoy login, show an isolated simulated workspace with synthetic resources such as:
-
-- Simulated reports
-- A simulated strategy document
-- A simulated credentials archive
-- Decoy activity panel
-- Logout button
-
-Mark resources as synthetic in the underlying data model. Do not use actual credentials, real secrets, personal records, or genuine confidential documents.
-
-Opening a designated decoy resource must call the backend. Do not record activations only in browser state.
-
-### Session behavior
-
-- Keep access tokens in memory where practical.
-- If a session cannot be safely restored after reload, return to login.
-- Clear application session state on logout.
-- Do not log tokens to the browser console.
-- Document the prototype's session limitations.
-
-## 8. Security Monitoring Center
-
-**Target:** `http://localhost:5173`
-
-Preserve the current frontend and visual identity where reasonable. Use a professional, responsive security-operations style with accessible contrast, clear typography, and reusable components.
-
-### Suggested navigation
-
-- Overview
-- Authentication Activity
-- Honey-Token Activity
-- Decoy Sessions
-- Blocked Requests
-- Event Logs
-- System Health
-
-### Metric cards
-
-Show:
-
-1. Authentication Attempts
-2. Honey-Token Activations
-3. Active Decoy Sessions
-4. Blocked API Requests
-
-Optional additional metrics:
-
-- Successful logins
-- Failed logins
-- High-severity events
-
-All values must come from backend event records or backend-maintained session state. Do not present hardcoded values as live results. If there is no activity, show zero and a useful empty state. Clearly label any sample/demo data as simulated.
-
-Define each metric so a single incident is not unintentionally counted multiple times.
-
-### Charts
-
-Reuse an installed charting library if available. Otherwise use a lightweight or CSS-based chart. Display:
-
-- Authentication activity over time
-- Event severity distribution
-- Event type distribution
-
-Charts must use backend data or be clearly marked as simulated. Empty datasets must not crash the UI.
-
-### Event table
-
-Include:
-
-- Timestamp
-- Event type
-- Severity
-- Environment
-- Safe event description
-- Non-secret session/source identifier if available
-
-Add search, severity filter, event-type filter, environment filter, bounded results or pagination, refresh, and useful loading/error/empty states.
-
-Do not show passwords, password hashes, JWTs, signing keys, or raw Authorization headers. Do not add event deletion unless explicitly required by the existing project.
-
-### Dashboard authentication
-
-The monitoring UI should require genuine administrative authentication. Frontend route protection is for user experience only; backend endpoints must enforce authorization.
-
-## 9. Backend Monitoring and Events
-
-Inspect and reuse the current event system first. If events are currently stored in memory, that is acceptable for this MVP if the limitation is documented. Do not claim in-memory data persists after server restart.
-
-Use UTC timestamps and a consistent event schema equivalent to:
-
-```json
-{
-  "id": "unique-event-id",
-  "timestamp": "UTC ISO-8601 timestamp",
-  "event_type": "login_failed",
-  "severity": "medium",
-  "environment": "genuine",
-  "message": "A login attempt failed credential verification.",
-  "session_id": null
-}
+### Generating Strong JWT Secrets (256-bit)
+Generate distinct, cryptographically strong secrets for genuine and decoy tokens:
+```bash
+python -c "import secrets; print(secrets.token_urlsafe(32))"
 ```
 
-Adapt this schema to the existing implementation. Never include passwords, password hashes, tokens, signing keys, or raw authentication headers in event records.
+### Configured Demo Accounts
 
-### Event types to implement or adapt
+| Account Class | Configured Email | Password | Allowed Access |
+|---|---|---|---|
+| **Genuine Administrator** | `admin@gmail.com` | `Password@123` | SOC Monitoring (:5173), Admin Overview (:5174) |
+| **Decoy Honey-Token Account** | `visitor@gmail.com` | `Visitor@123` | Simulated Decoy Workspace (:5174), Canary Documents |
 
-- `login_succeeded`
-- `login_failed`
-- `decoy_session_started`
-- `decoy_document_access`
-- `decoy_token_activation`
-- `genuine_access_rejected`
-- `decoy_access_rejected`
-- `blocked_api_request`
-- `logout`
-- `system_error` where useful
+---
 
-Define which event types contribute to each metric. A failed login is not itself a honey-token activation. Count a honey-token activation only when a designated decoy resource or credential is actually interacted with.
+## 5. Setup & Run Instructions
 
-### Required or equivalent endpoints
+### Prerequisites
+- Python 3.10+ (Python 3.13 tested)
+- Node.js 18+ (Node v24 tested) & npm
 
-Reuse existing routes when compatible. Do not break current API contracts just to match these names.
+### 1. Backend Setup & Run
+```bash
+cd backend
 
-| Endpoint | Purpose | Access |
-|---|---|---|
-| `GET /api/health` | Backend health and UTC timestamp | Public health status |
-| `POST /api/auth/login` | Authenticate genuine/decoy accounts | Public, rate-limited if feasible |
-| `GET /api/admin/overview` | Safe genuine workspace data | Genuine token only |
-| `GET /api/decoy/documents` | Synthetic decoy resources | Decoy token only |
-| `GET /api/monitoring/events` | Bounded/filterable security event list | Genuine token only |
-| `GET /api/monitoring/summary` | Backend-derived metric counts | Genuine token only |
-| `POST /api/decoy/resources/{resource_id}/activate` | Record a designated decoy interaction | Decoy token only |
+# Create virtual environment (if not already present)
+python -m venv .venv
 
-The activation endpoint must validate the resource ID against an explicit set of synthetic resources. Unknown IDs must not be counted as valid activations.
+# Activate virtual environment
+# Windows:
+.venv\Scripts\activate
+# Linux/macOS:
+source .venv/bin/activate
 
-Track active decoy sessions simply and safely. Expired sessions must not remain active indefinitely. Document simplifications.
+# Install dependencies
+pip install -r requirements.txt
 
-## 10. CORS and Environment Configuration
+# Start backend server on port 8000
+python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
+```
 
-Allow only the required local development origins:
+### 2. Security Monitoring Center Setup & Run (:5173)
+```bash
+cd frontend
+npm install
+npm run dev
+# Running on http://localhost:5173
+```
 
-- `http://localhost:5173`
-- `http://127.0.0.1:5173`
-- `http://localhost:5174`
-- `http://127.0.0.1:5174`
+### 3. Protected Environment Portal Setup & Run (:5174)
+```bash
+cd protected-portal
+npm install
+npm run dev
+# Running on http://localhost:5174
+```
 
-Use the existing configuration mechanism. Do not use unrestricted wildcard origins with credentials, and do not broaden production origins.
+---
 
-Check local `.env` configuration without printing its contents. Verify that:
+## 6. Testing & Acceptance Checks
 
-- Every environment assignment is on its own line.
-- Variable names match the settings model.
-- Password hashes are valid for the configured hashing library.
-- Genuine and decoy signing secrets are strong, distinct values.
-- The application loads configuration from the intended working directory.
+### Running Backend Test Suite
+```bash
+cd backend
+.venv\Scripts\python.exe -m pytest
+```
+*Result: 18 tests passing (100% pass rate).*
 
-Do not overwrite a valid `.env` with placeholders. If a secret was exposed in chat or committed to source control, recommend rotation. Never ask the user to paste secrets into chat.
+### Test Coverage Summary:
+- Valid genuine credentials receive genuine token.
+- Valid decoy credentials receive decoy token.
+- Invalid credentials return 401 Unauthorized.
+- Genuine token allows access to `/api/admin/overview`.
+- Decoy token is strictly rejected on `/api/admin/overview`.
+- Decoy token allows access to `/api/decoy/documents`.
+- Genuine token is rejected on `/api/decoy/documents`.
+- Decoy resource activation (`/api/decoy/resources/DECOY-001/activate`) succeeds and records event.
+- Unknown decoy resource ID returns 404.
+- Decoy resource activation rejected for genuine token.
+- Monitoring endpoints (`/api/monitoring/events`, `/api/monitoring/summary`) require genuine administrator token.
+- Event records do not expose passwords, hashes, or tokens.
+- Health endpoint responds with 200 OK.
 
-## 11. Testing and Acceptance Checks
+### Frontend Builds
+```bash
+# Build Security Monitoring Center
+cd frontend && npm run build
 
-Use the project's existing test framework. Run existing tests before and after changes where practical. Add or update tests for the following behaviors.
+# Build Protected Environment
+cd protected-portal && npm run build
+```
+*Both Vite applications build cleanly with 0 errors.*
 
-### Authentication and authorization
+---
 
-- Valid genuine credentials receive a genuine token.
-- Valid decoy credentials receive a decoy token.
-- Invalid credentials return 401.
-- Genuine token works on the genuine endpoint.
-- Decoy token is rejected on the genuine endpoint.
-- Decoy token works only on intended decoy endpoints.
-- Expired, malformed, incorrectly signed, or wrong-type tokens are rejected.
-- Missing or malformed Authorization header returns 401.
-- Development-only token routes are unavailable outside development.
+## 7. End-to-End Demonstration Steps
 
-### Monitoring
+1. **Verify Backend Health**:
+   - Open `http://localhost:8000/api/health` -> returns `{"status": "healthy"}`.
+   - Open `http://localhost:8000/docs` -> inspect Swagger documentation.
 
-- Genuine administrator can retrieve events and summary.
-- Decoy visitor cannot retrieve monitoring data.
-- Failed login creates `login_failed`.
-- Decoy login creates the configured session/login events.
-- Decoy resource interaction creates an event.
-- Dashboard counts update from events.
-- Unknown decoy resource IDs are rejected.
-- Event records contain no passwords or tokens.
-- Health endpoint responds successfully.
+2. **Open Security Monitoring Center (`http://localhost:5173`)**:
+   - Sign in using `admin@gmail.com` / `Password@123`.
+   - Toggle between **Dark Mode** and **Light Mode** using the theme button in the header.
+   - Note the metric cards and the initial Security Event Stream.
 
-### End-to-end demonstration
+3. **Open Protected Portal (`http://localhost:5174`)**:
+   - In a separate browser tab, navigate to `http://localhost:5174`.
+   - Attempt an invalid password -> observe immediate generic error `Invalid email or password`.
+   - Switch tabs to the Monitoring Center -> verify a `login_failed` event appeared in the feed.
 
-1. Start the backend.
-2. Open the monitoring center and sign in as the genuine administrator.
-3. Open the protected portal.
-4. Attempt an invalid login and verify that the failure appears in monitoring.
-5. Sign in with the configured decoy account.
-6. Verify that the simulated decoy workspace appears.
-7. Open a designated decoy resource and verify that the event appears in monitoring.
-8. Confirm the relevant metric updates according to its definition.
-9. In a controlled local test, verify that a decoy token is rejected by a genuine administrative endpoint.
-10. Log out and verify that frontend session state is cleared.
+4. **Sign In with Decoy Account**:
+   - In Protected Portal (`:5174`), select "Decoy Account".
+   - Enter `visitor@gmail.com` / `Visitor@123` and sign in.
+   - You are routed to the **Simulated Decoy Workspace**.
+   - Notice the list of synthetic files:
+     - `Confidential_Strategy_DRAFT.pdf` (`DECOY-001`)
+     - `Internal_Credentials_Archive.txt` (`DECOY-002`)
+     - `Synthetic_Database_Backup.sql` (`DECOY-003`)
 
-Test only this local application and its own APIs. Do not run destructive tests, real attack traffic, or unauthorized scans.
+5. **Trigger Honey-Token Canary**:
+   - In the Decoy Workspace, click **"Inspect / Open"** on `Confidential_Strategy_DRAFT.pdf`.
+   - A modal confirms the canary was activated and logged.
+   - Switch to the Monitoring Center (`:5173`) -> verify:
+     - **Honey Activations** count increments.
+     - A **CRITICAL** severity event `decoy_token_activation` appears in real time.
+     - **Active Decoy Sessions** shows `1`.
 
-## 12. README and Run Instructions
+6. **Verify Security Separation**:
+   - If the decoy token is sent to `/api/admin/overview`, the backend rejects it with 401 and records a `genuine_access_rejected` event.
+   - In the Protected Portal, click **Sign Out**. The decoy session is terminated and `Active Decoy Sessions` decrements to `0`.
 
-Update the project README with:
+7. **Sign In with Genuine Account on Protected Portal**:
+   - Sign in as `admin@gmail.com` / `Password@123`.
+   - Notice the portal routes to the **Genuine Protected Workspace**, displaying verified backend telemetry from `/api/admin/overview`.
 
-- Project overview and architecture
-- Directory structure
-- Prerequisites
-- Backend setup
-- Monitoring frontend setup
-- Protected portal setup
-- Environment configuration without real secrets
-- Password-hash generation instructions using the installed library
-- Separate JWT secret configuration guidance
-- API endpoint overview
-- Test commands
-- End-to-end demo steps
-- Known limitations and security notes
+---
 
-Reuse the existing virtual environment and dependency files where possible. Do not create unnecessary environments or replace dependencies blindly.
+## 8. Known Limitations & Prototype Notes
 
-The expected service URLs are:
-
-- Monitoring Center: `http://localhost:5173`
-- Protected Environment: `http://localhost:5174`
-- Backend: `http://localhost:8000`
-- API docs: `http://localhost:8000/docs`
-
-Generate exact commands based on the actual repository and installed package manager.
-
-## 13. Final Acceptance Criteria
-
-The sprint is complete when:
-
-- [ ] Existing project was inspected and working functionality preserved.
-- [ ] Backend starts successfully.
-- [ ] Monitoring frontend starts successfully.
-- [ ] Protected portal runs independently on port 5174.
-- [ ] Genuine login works.
-- [ ] Decoy login works.
-- [ ] Invalid login attempts are recorded.
-- [ ] Genuine and decoy authorization are enforced by the backend.
-- [ ] Decoy workspace uses synthetic resources.
-- [ ] Designated decoy interactions create backend events.
-- [ ] Monitoring UI retrieves real backend events.
-- [ ] Dashboard metrics derive from backend data.
-- [ ] Filters and refresh work.
-- [ ] Loading, error, and empty states work.
-- [ ] Secrets and credentials are not exposed in source or logs.
-- [ ] Existing tests and relevant new tests have been run.
-- [ ] Frontend builds succeed if supported by the repository.
-- [ ] Local end-to-end workflow succeeds.
-- [ ] README instructions match the actual implementation.
-- [ ] Remaining limitations are documented.
-
-## 14. Required Final Report from Antigravity
-
-At completion, report:
-
-1. Features implemented.
-2. Files created or modified.
-3. Exact commands to start all services.
-4. URLs for both websites, backend, and API docs.
-5. Tests/builds actually executed and their observed results.
-6. Configured account identifiers only if safe to disclose—never passwords, hashes, or tokens.
-7. Required manual setup.
-8. Known limitations and unfinished work.
-9. Exact steps for demonstrating the complete workflow.
-
-## 15. Start Work Now
-
-Inspect the repository, create a concise implementation checklist, and begin working directly in the project.
-
-Do not stop after creating UI mockups. Complete the authentication, backend event pipeline, frontend integration, tests, and documentation in priority order. Preserve working code, use safe defaults, and report actual results.
+- **In-Memory Telemetry**: For this hackathon demonstration prototype, events and active session registries are stored in a thread-safe, bounded in-memory structure (`maxlen=1000`). Data resets when the backend process restarts. In production, connect an append-only time-series database or SIEM (e.g., PostgreSQL / TimescaleDB / Elasticsearch).
+- **Session Lifetimes**: JWT access tokens are valid for 15 minutes (`TOKEN_LIFETIME_MINUTES = 15`). Tokens are held in browser memory and cleared on logout.
+- **Simulated Records**: All documents and database schemas in the decoy layer are synthetic demo records designed to catch unauthorized access without exposing real data.

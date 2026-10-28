@@ -5,7 +5,7 @@
     BlinkMacSystemFont, "Segoe UI", sans-serif;
 
   color: #e5edf7;
-  background: #080b10;
+  background-color: #080b10;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -26,7 +26,8 @@ body {
 }
 
 button,
-input {
+input,
+select {
   font: inherit;
 }
 
@@ -41,6 +42,7 @@ button {
 
 ::-webkit-scrollbar {
   width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
@@ -52,6 +54,7 @@ button {
   border-radius: 10px;
 }
 
+/* Glassmorphism card styles */
 .glass {
   background: linear-gradient(
     145deg,
@@ -59,7 +62,7 @@ button {
     rgba(12, 17, 25, 0.92)
   );
   border: 1px solid rgba(148, 163, 184, 0.12);
-  box-shadow: 0 15px 50px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 15px 50px rgba(0, 0, 0, 0.18);
 }
 
 .grid-background {
@@ -70,7 +73,7 @@ button {
 }
 
 .glow-green {
-  box-shadow: 0 0 24px rgba(0, 245, 160, 0.09);
+  box-shadow: 0 0 24px rgba(0, 245, 160, 0.15);
 }
 
 .status-dot {
@@ -112,21 +115,37 @@ button {
 }
 
 .animate-fade-up {
-  animation: fade-up 0.5s ease both;
+  animation: fade-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-@keyframes scan {
-  0% {
-    transform: translateY(-100%);
-  }
-
-  100% {
-    transform: translateY(400%);
-  }
+/* Light Mode Overrides */
+.light-theme {
+  color: #0f172a;
+  background-color: #f8fafc;
 }
 
-.scan-line {
-  animation: scan 5s linear infinite;
+.light-theme ::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+.light-theme ::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+}
+
+.light-theme .glass {
+  background: linear-gradient(
+    145deg,
+    rgba(255, 255, 255, 0.98),
+    rgba(248, 250, 252, 0.95)
+  );
+  border: 1px solid rgba(203, 213, 225, 0.8);
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+}
+
+.light-theme .grid-background {
+  background-image:
+    linear-gradient(rgba(15, 23, 42, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(15, 23, 42, 0.04) 1px, transparent 1px);
 }
 
 @media (prefers-reduced-motion: reduce) {
