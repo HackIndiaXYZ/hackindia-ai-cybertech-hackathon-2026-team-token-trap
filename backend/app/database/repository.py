@@ -10,6 +10,7 @@ from app.database.models import (
     AiConversation,
     DecoyResource,
     DecoySession,
+    SandboxAuditLog,
     SecurityEvent,
     User,
 )
@@ -183,6 +184,11 @@ def get_monitoring_summary_db(db: Session) -> dict[str, Any]:
             "decoy_document_access",
             "decoy_resource_activated",
             "honey_credential_activated",
+            "honey_canary_token_tripped",
+            "sandbox_database_accessed",
+            "sandbox_sql_query_executed",
+            "sandbox_sql_injection_detected",
+            "sandbox_data_exfiltration_attempt",
         }:
             honey_activations += 1
 
@@ -191,6 +197,7 @@ def get_monitoring_summary_db(db: Session) -> dict[str, Any]:
             "decoy_access_rejected",
             "blocked_api_request",
             "rate_limit_exceeded",
+            "sandbox_sql_injection_detected",
         }:
             blocked_requests += 1
 
@@ -391,3 +398,54 @@ def list_ai_conversations(db: Session, limit: int = 20) -> list[AiConversation]:
     """Retrieve recent AI Copilot conversations."""
     stmt = select(AiConversation).order_by(desc(AiConversation.created_at)).limit(limit)
     return list(db.execute(stmt).scalars().all())
+
+
+# ============================================================================
+# Sandbox Database Audit Operations (Visitor Tracking)
+# ============================================================================
+
+def log_sandbox_action(
+    db: Session,
+    session_id: str,
+    visitor_email: str,
+    action_type: str,
+    target_table: str,
+    query_text: Optional[str] = None,
+    canary_token_tripped: Optional[str] = None,
+    client_ip: str = "127.0.0.1",
+    user_agent: Optional[str] = None,
+    rows_returned: int = 0,
+    severity: str = "high",
+) -> SandboxAuditLog:
+    """Record an intruder action, SQL query, or canary tripwire in the sandbox database."""
+    log = SandboxAuditLog(
+        session_id=session_id,
+        visitor_email=visitor_email,
+        action_type=action_type,
+        target_table=target_table,
+        query_text=query_text,
+        canary_token_tripped=canary_token_tripped,
+        client_ip=client_ip,
+        user_agent=user_agent,
+        rows_returned=rows_returned,
+        severity=severity,
+        created_at=datetime.now(timezone.utc),
+    )
+    db.add(log)
+    db.commit()
+    db.refresh(log)
+    return log
+
+
+def list_sandbox_audit_logs(
+    db: Session,
+    limit: int = 50,
+    session_id: Optional[str] = None,
+) -> list[dict[str, Any]]:
+    """Retrieve recent intruder audit records from the sandbox database."""
+    stmt = select(SandboxAuditLog).order_by(desc(SandboxAuditLog.created_at))
+    if session_id:
+        stmt = stmt.where(SandboxAuditLog.session_id == session_id)
+    stmt = stmt.limit(limit)
+    records = db.execute(stmt).scalars().all()
+    return [r.to_dict() for r in records]

@@ -194,3 +194,42 @@ class AiConversation(Base):
             "source": self.source,
             "created_at": self.created_at.isoformat() if self.created_at else None,
         }
+
+
+class SandboxAuditLog(Base):
+    """Detailed audit trail of intruder queries and honey-token interactions in the DB sandbox."""
+    __tablename__ = "sandbox_audit_logs"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    session_id: Mapped[str] = mapped_column(String(100), index=True, nullable=False)
+    visitor_email: Mapped[str] = mapped_column(String(255), index=True, nullable=False)
+    action_type: Mapped[str] = mapped_column(String(100), index=True, nullable=False)  # 'table_scan', 'sql_query', 'canary_access', 'data_export', 'sql_injection'
+    target_table: Mapped[str] = mapped_column(String(100), index=True, nullable=False)
+    query_text: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    canary_token_tripped: Mapped[Optional[str]] = mapped_column(String(255), index=True, nullable=True)
+    client_ip: Mapped[str] = mapped_column(String(100), default="127.0.0.1", nullable=False)
+    user_agent: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    rows_returned: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    severity: Mapped[str] = mapped_column(String(20), default="high", nullable=False)  # 'medium', 'high', 'critical'
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+        server_default=func.now(),
+        index=True,
+        nullable=False,
+    )
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "id": self.id,
+            "session_id": self.session_id,
+            "visitor_email": self.visitor_email,
+            "action_type": self.action_type,
+            "target_table": self.target_table,
+            "query_text": self.query_text,
+            "canary_token_tripped": self.canary_token_tripped,
+            "client_ip": self.client_ip,
+            "rows_returned": self.rows_returned,
+            "severity": self.severity,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+        }

@@ -10,11 +10,18 @@ from app.config import settings
 from app.auth.routes import router as auth_router
 from app.monitoring.routes import router as monitoring_router
 from app.ai.routes import router as ai_router
+from app.deception import deception_router
 from app.database.connection import SessionLocal, check_db_health, init_db, is_postgres
-from app.database.models import User, SecurityEvent, DecoyResource, DecoySession, AiConversation
+from app.database.models import User, SecurityEvent, DecoyResource, DecoySession, AiConversation, SandboxAuditLog
 from app.database.seed import seed_database
 
 logger = logging.getLogger("tokentrap.api")
+
+# Ensure all database schema tables exist on import
+try:
+    init_db()
+except Exception:
+    pass
 
 
 @asynccontextmanager
@@ -52,6 +59,7 @@ app.add_middleware(
 app.include_router(auth_router)
 app.include_router(monitoring_router)
 app.include_router(ai_router)
+app.include_router(deception_router, prefix="/api")
 
 
 @app.get("/")
@@ -88,6 +96,7 @@ async def database_status():
             counts["decoy_resources"] = db.execute(select(func.count(DecoyResource.id))).scalar_one() or 0
             counts["decoy_sessions"] = db.execute(select(func.count(DecoySession.session_id))).scalar_one() or 0
             counts["ai_conversations"] = db.execute(select(func.count(AiConversation.id))).scalar_one() or 0
+            counts["sandbox_audit_logs"] = db.execute(select(func.count(SandboxAuditLog.id))).scalar_one() or 0
     except Exception as exc:
         counts["error"] = str(exc)
 

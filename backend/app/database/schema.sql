@@ -102,6 +102,30 @@ CREATE INDEX IF NOT EXISTS idx_ai_conversations_user ON ai_conversations(user_em
 CREATE INDEX IF NOT EXISTS idx_ai_conversations_created ON ai_conversations(created_at DESC);
 
 -- ============================================================================
+-- 6. Sandbox Audit Logs Table (Visitor & Intruder Query Tracking)
+-- ============================================================================
+CREATE TABLE IF NOT EXISTS sandbox_audit_logs (
+    id SERIAL PRIMARY KEY,
+    session_id VARCHAR(100) NOT NULL,
+    visitor_email VARCHAR(255) NOT NULL,
+    action_type VARCHAR(100) NOT NULL, -- 'table_scan', 'sql_query', 'canary_access', 'data_export', 'sql_injection'
+    target_table VARCHAR(100) NOT NULL,
+    query_text TEXT,
+    canary_token_tripped VARCHAR(255),
+    client_ip VARCHAR(100) NOT NULL DEFAULT '127.0.0.1',
+    user_agent TEXT,
+    rows_returned INT NOT NULL DEFAULT 0,
+    severity VARCHAR(20) NOT NULL DEFAULT 'high',
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_sandbox_audit_session ON sandbox_audit_logs(session_id);
+CREATE INDEX IF NOT EXISTS idx_sandbox_audit_visitor ON sandbox_audit_logs(visitor_email);
+CREATE INDEX IF NOT EXISTS idx_sandbox_audit_table ON sandbox_audit_logs(target_table);
+CREATE INDEX IF NOT EXISTS idx_sandbox_audit_canary ON sandbox_audit_logs(canary_token_tripped);
+CREATE INDEX IF NOT EXISTS idx_sandbox_audit_created ON sandbox_audit_logs(created_at DESC);
+
+-- ============================================================================
 -- Trigger Function for Automatic updated_at
 -- ============================================================================
 CREATE OR REPLACE FUNCTION update_updated_at_column()
@@ -167,5 +191,41 @@ VALUES
         '/root/.aws/credentials.canary',
         'CANARY_TOKEN_AWS_ROOT_001',
         '{"fake_access_key": "AKIA_FAKE_CANARY_ACCESS_KEY_01", "region": "us-east-1", "honey_marker": "TRAP-CANARY-DELTA"}'::jsonb
+    ),
+    (
+        'HONEY-DB-FIN-01',
+        'honey_financial_ledgers',
+        'database_table',
+        'Top Secret Financial',
+        'tokentrap_sandbox.public.honey_financial_ledgers',
+        'CANARY_SQL_WIRE_SWIFT_009',
+        '{"simulated_records": 4, "target": "SWIFT Wire Transfers", "honey_marker": "TRAP-DB-FIN"}'::jsonb
+    ),
+    (
+        'HONEY-DB-AUTH-02',
+        'honey_user_credentials',
+        'database_table',
+        'Root Security Vault',
+        'tokentrap_sandbox.public.honey_user_credentials',
+        'CANARY_SQL_ADMIN_HASH_77',
+        '{"simulated_records": 4, "target": "System Passwords & Tokens", "honey_marker": "TRAP-DB-AUTH"}'::jsonb
+    ),
+    (
+        'HONEY-DB-PII-03',
+        'honey_customer_pii',
+        'database_table',
+        'Restricted Customer PII',
+        'tokentrap_sandbox.public.honey_customer_pii',
+        'CANARY_SQL_PII_SSN_551',
+        '{"simulated_records": 4, "target": "Customer SSN & Cards", "honey_marker": "TRAP-DB-PII"}'::jsonb
+    ),
+    (
+        'HONEY-DB-INFRA-04',
+        'honey_infrastructure_nodes',
+        'database_table',
+        'Critical Infrastructure',
+        'tokentrap_sandbox.public.honey_infrastructure_nodes',
+        'CANARY_SQL_K8S_ROOT_334',
+        '{"simulated_records": 4, "target": "Kubernetes & SSH Bastions", "honey_marker": "TRAP-DB-INFRA"}'::jsonb
     )
 ON CONFLICT (id) DO NOTHING;

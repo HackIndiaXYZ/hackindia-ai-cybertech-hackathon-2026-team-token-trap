@@ -208,6 +208,11 @@ def get_monitoring_summary() -> dict[str, Any]:
             "decoy_document_access",
             "decoy_resource_activated",
             "honey_credential_activated",
+            "honey_canary_token_tripped",
+            "sandbox_database_accessed",
+            "sandbox_sql_query_executed",
+            "sandbox_sql_injection_detected",
+            "sandbox_data_exfiltration_attempt",
         }:
             honey_activations += 1
 
@@ -217,6 +222,7 @@ def get_monitoring_summary() -> dict[str, Any]:
             "decoy_access_rejected",
             "blocked_api_request",
             "rate_limit_exceeded",
+            "sandbox_sql_injection_detected",
         }:
             blocked_requests += 1
 

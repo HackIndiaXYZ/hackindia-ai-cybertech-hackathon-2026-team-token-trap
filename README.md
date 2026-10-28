@@ -259,9 +259,10 @@ TokenTrap is powered by a production-ready **PostgreSQL database architecture** 
 ### Database Schema Tables:
 1. **`users`**: Genuine administrators and decoy honey-accounts with Argon2id password hashes, account modes (`genuine` vs `decoy`), and roles.
 2. **`security_events`**: Immutable audit logs of authentication attempts, canary interactions, and blocked requests. Uses PostgreSQL `JSONB` with a **GIN index** for sub-millisecond query performance on nested event telemetry.
-3. **`decoy_resources`**: Synthetic honeypot canary tokens (`DECOY-001`, `DECOY-002`, `DECOY-003`, `HONEY-CRED-01`), tracking activation counts and timestamps.
+3. **`decoy_resources`**: Synthetic honeypot canary tokens (`DECOY-001`, `DECOY-002`, `DECOY-003`, `HONEY-CRED-01`, `HONEY-DB-FIN-01`, `HONEY-DB-AUTH-02`, `HONEY-DB-PII-03`, `HONEY-DB-INFRA-04`), tracking activation counts and timestamps.
 4. **`decoy_sessions`**: Intruder tracking registry with timeout expiration and logout termination.
 5. **`ai_conversations`**: Complete prompt-response audit log for the Google Gemini AI Security Copilot.
+6. **`sandbox_audit_logs`**: Detailed intruder activity log capturing every SQL query, table scan, SQL injection attempt, and data exfiltration dump performed by the visitor.
 
 ### Starting PostgreSQL with Docker:
 A ready-to-run [docker-compose.yml](file:///d:/Projects/Hackindia/hackindia-ai-cybertech-hackathon-2026-team-token-trap/docker-compose.yml) is included:

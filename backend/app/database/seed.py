@@ -97,6 +97,58 @@ def seed_database() -> dict[str, int]:
                     "honey_marker": "TRAP-CANARY-DELTA",
                 },
             },
+            {
+                "resource_id": "HONEY-DB-FIN-01",
+                "name": "honey_financial_ledgers",
+                "resource_type": "database_table",
+                "classification": "Top Secret Financial",
+                "fake_path": "tokentrap_sandbox.public.honey_financial_ledgers",
+                "canary_token": "CANARY_SQL_WIRE_SWIFT_009",
+                "metadata_json": {
+                    "simulated_records": 4,
+                    "target": "SWIFT Wire Transfers",
+                    "honey_marker": "TRAP-DB-FIN",
+                },
+            },
+            {
+                "resource_id": "HONEY-DB-AUTH-02",
+                "name": "honey_user_credentials",
+                "resource_type": "database_table",
+                "classification": "Root Security Vault",
+                "fake_path": "tokentrap_sandbox.public.honey_user_credentials",
+                "canary_token": "CANARY_SQL_ADMIN_HASH_77",
+                "metadata_json": {
+                    "simulated_records": 4,
+                    "target": "System Passwords & Tokens",
+                    "honey_marker": "TRAP-DB-AUTH",
+                },
+            },
+            {
+                "resource_id": "HONEY-DB-PII-03",
+                "name": "honey_customer_pii",
+                "resource_type": "database_table",
+                "classification": "Restricted Customer PII",
+                "fake_path": "tokentrap_sandbox.public.honey_customer_pii",
+                "canary_token": "CANARY_SQL_PII_SSN_551",
+                "metadata_json": {
+                    "simulated_records": 4,
+                    "target": "Customer SSN & Cards",
+                    "honey_marker": "TRAP-DB-PII",
+                },
+            },
+            {
+                "resource_id": "HONEY-DB-INFRA-04",
+                "name": "honey_infrastructure_nodes",
+                "resource_type": "database_table",
+                "classification": "Critical Infrastructure",
+                "fake_path": "tokentrap_sandbox.public.honey_infrastructure_nodes",
+                "canary_token": "CANARY_SQL_K8S_ROOT_334",
+                "metadata_json": {
+                    "simulated_records": 4,
+                    "target": "Kubernetes & SSH Bastions",
+                    "honey_marker": "TRAP-DB-INFRA",
+                },
+            },
         ]
 
         for canary in canaries:

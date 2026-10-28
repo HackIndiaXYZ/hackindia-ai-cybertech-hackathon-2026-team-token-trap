@@ -58,4 +58,25 @@ export const portalApi = {
       method: 'POST',
       token,
     }),
+
+  getSandboxOverview: (token) => request('/api/sandbox/overview', { token }),
+
+  getSandboxTables: (token) => request('/api/sandbox/tables', { token }),
+
+  getSandboxTableRecords: (token, tableName) =>
+    request(`/api/sandbox/tables/${encodeURIComponent(tableName)}/records`, { token }),
+
+  executeSandboxQuery: (token, query) =>
+    request('/api/sandbox/query', {
+      method: 'POST',
+      body: JSON.stringify({ query }),
+      token,
+    }),
+
+  exportSandboxTable: (token, tableName, format = 'sql') =>
+    request('/api/sandbox/export', {
+      method: 'POST',
+      body: JSON.stringify({ table_name: tableName, format }),
+      token,
+    }),
 }
